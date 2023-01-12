@@ -77,7 +77,8 @@ func getOrderPushMsg() {
 }
 
 // NewMsg 生成一个mq消息
-func NewMsg(topic string, data []byte) *primitive.Message {
+func NewMsg(topic string, msgStruct interface{}) *primitive.Message {
+	data, _ := json.Marshal(msgStruct)
 	return &primitive.Message{
 		Topic: topic,
 		Body:  data,
@@ -101,8 +102,85 @@ func buildOrderMsg(uid int) *primitive.Message {
 		Source:          "3",
 		Symbol:          "btcusdt",
 	}
-	data, _ := json.Marshal(msgStruct)
-	return NewMsg("", data)
+	return NewMsg("", msgStruct)
 }
 
-//
+// trade消息
+func buildTradeMsg(uid int) *primitive.Message {
+	msgStruct := &tradeMsg{
+		AccountID:       uid,
+		Aggressor:       false,
+		ClientOrderID:   "1572041365652844545",
+		EventType:       "orders",
+		OrderCreateTime: time.Now().Add(-1 * time.Second).UnixMilli(),
+		OrderID:         1604106271466196992,
+		OrderPrice:      "2996.54",
+		OrderSide:       "sell",
+		OrderSize:       "0.4118",
+		OrderStatus:     "filled",
+		OrderType:       "limit",
+		Source:          "3",
+		Symbol:          "btcusdt",
+	}
+	return NewMsg("", msgStruct)
+}
+
+// accounts
+func buildAccountsMsg(uid int) *primitive.Message {
+	//1、accountDos
+	ad1 := accountDo{
+		ID:      1266378177,
+		UID:     uid,
+		Type:    2011589,
+		Balance: 9900.0000000000000000,
+	}
+
+	ad2 := accountDo{
+		ID:      1266378178,
+		UID:     uid,
+		Type:    2021589,
+		Balance: 100.0000000000000000,
+	}
+	dos := []accountDo{ad1, ad2}
+
+	//2、transferAccounts
+	t1 := transaction{
+		AccountType:   2011589,
+		OppositeUID:   1008424786,
+		OppositeType:  2021589,
+		Symbol:        "BIB",
+		Amount:        100,
+		Direction:     "OUT",
+		Scene:         "create_order",
+		RefID:         1607295604050137088,
+		RefType:       "ex_order_bibusdt",
+		OldTransferID: 1607295604050137089,
+	}
+
+	t2 := transaction{
+		AccountType:   2021589,
+		OppositeUID:   1008424786,
+		OppositeType:  2011589,
+		Symbol:        "BIB",
+		Amount:        100,
+		Direction:     "IN",
+		Scene:         "create_order",
+		RefID:         1607295604050137088,
+		RefType:       "ex_order_bibusdt",
+		OldTransferID: 1607295604050137089,
+	}
+	ts := []transaction{t1, t2}
+	ta := TransferAccounts{
+		UID:          uid,
+		ExtParams:    nil,
+		Transactions: ts,
+	}
+
+	//3、all
+	msgStruct := accountsChangeMsg{
+		TransferAccounts: ta,
+		AccountDos:       dos,
+	}
+
+	return NewMsg("", msgStruct)
+}
