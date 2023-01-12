@@ -1,6 +1,7 @@
 package message
 
 import (
+	"bib-wss-test/common"
 	"encoding/json"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"time"
@@ -72,12 +73,20 @@ type transaction struct {
 	OldTransferID int64  `json:"oldTransferId"`
 }
 
-func getOrderPushMsg() {
+func GetOrderPushMsg(topicType string, uid int) *primitive.Message {
+	if topicType == common.OrdersTopic {
+		return buildOrderMsg(uid)
+	}
 
+	if topicType == common.TradeTopic {
+		return buildTradeMsg(uid)
+	}
+
+	return buildAccountsMsg(uid)
 }
 
-// NewMsg 生成一个mq消息
-func NewMsg(topic string, msgStruct interface{}) *primitive.Message {
+// newMessage 生成一个mq消息
+func newMessage(topic string, msgStruct interface{}) *primitive.Message {
 	data, _ := json.Marshal(msgStruct)
 	return &primitive.Message{
 		Topic: topic,
@@ -102,7 +111,7 @@ func buildOrderMsg(uid int) *primitive.Message {
 		Source:          "3",
 		Symbol:          "btcusdt",
 	}
-	return NewMsg("", msgStruct)
+	return newMessage(common.OrdersTopic, msgStruct)
 }
 
 // trade消息
@@ -122,7 +131,7 @@ func buildTradeMsg(uid int) *primitive.Message {
 		Source:          "3",
 		Symbol:          "btcusdt",
 	}
-	return NewMsg("", msgStruct)
+	return newMessage(common.TradeTopic, msgStruct)
 }
 
 // accounts
@@ -182,5 +191,5 @@ func buildAccountsMsg(uid int) *primitive.Message {
 		AccountDos:       dos,
 	}
 
-	return NewMsg("", msgStruct)
+	return newMessage(common.AccountsTopic, msgStruct)
 }

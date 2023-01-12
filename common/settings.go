@@ -5,3 +5,9 @@ var (
 	Topic          = "FUTURES_MATCHING_RESULTS_JSON_E_"
 	GroupName      = "QCProducerGroup"
 )
+
+var (
+	OrdersTopic   = "orders_ws_api"
+	TradeTopic    = "trade_ws_api"
+	AccountsTopic = "accounts_ws_api"
+)
